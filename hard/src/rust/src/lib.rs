@@ -44,12 +44,7 @@ fn dgc_degree_rust(mat: Robj) -> Doubles {
 
     let symbolic = SymbolicSparseColMat::new_checked(nrows, ncols, col_ptr, None, row_idx);
     let sparse_mat = SparseColMat::<usize, f64>::new(symbolic, values);
-
     let mut result = Doubles::new(nrows);
-
-    for i in 0..nrows {
-        result[i] = Rfloat::from(0.0);
-    }
 
     let (sym, val) = sparse_mat.parts();
     let (_, _, col_ptrs, _, row_indices) = sym.parts();
