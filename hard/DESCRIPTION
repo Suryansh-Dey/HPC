@@ -1,0 +1,15 @@
+Package: dgcmat
+Title: Sparse dgCMatrix to faer Bridge via Rust
+Version: 0.1.0
+Authors@R: person("Suryansh", "Dey", role = c("aut", "cre"), email = "suryansh@example.com")
+Description: Extracts the i, p, x slots of an R dgCMatrix sparse matrix via
+    extendr, wraps them as Rust slices, constructs a faer sparse matrix, and
+    returns the degree vector (row sums of absolute values) to R using
+    extendr's Integers type to avoid an unnecessary allocation.
+    Demonstrates the dgCMatrix -> faer FFI pattern for the hyperSpec GSoC
+    hard test.
+License: MIT + file LICENSE
+Encoding: UTF-8
+SystemRequirements: Cargo (Rust's package manager), rustc
+Imports:
+    Matrix
