@@ -1,0 +1,2 @@
+useDynLib(rowSum, .registration = TRUE)
+export(row_sums_faer)

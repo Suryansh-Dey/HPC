@@ -1,0 +1,10 @@
+Package: rowSum
+Title: Row Sums via Rust and Faer
+Version: 0.1.0
+Authors@R: person("Suryansh", "Dey", role = c("aut", "cre"), email = "suryansh@example.com")
+Description: A minimal R package that passes a dense matrix to Rust via extendr,
+    computes row sums using the faer linear algebra crate, and returns the result.
+    Demonstrates the extendr R-to-Rust FFI for the hyperSpec GSoC medium test.
+License: MIT + file LICENSE
+Encoding: UTF-8
+SystemRequirements: Cargo (Rust's package manager), rustc
