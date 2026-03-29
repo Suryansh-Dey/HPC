@@ -1,0 +1,6 @@
+useDynLib(rust, .registration = TRUE)
+export(rust_graph_smooth)
+export(graphSmooth)
+import(Matrix)
+import(hyperSpec)
+import(methods)

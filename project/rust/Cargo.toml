@@ -1,0 +1,13 @@
+[package]
+name = "rust"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+extendr-api = "0.8.1"
+faer = "0.24.0"
+petgraph = "0.6.5"
+rayon = "1.10.0"
