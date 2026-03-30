@@ -1,17 +1,17 @@
-// Raw CSC layout — borrows directly from R memory, zero allocation for x_slot
+// Raw CSC layout — borrows directly from R memory, total zero-copy for all slots (p, i, x)
 pub struct CscRef<'a> {
     pub nrows: usize,
     pub ncols: usize,
-    pub col_ptrs: Vec<usize>,
-    pub row_idx: Vec<usize>,
-    pub values: &'a [f64],
+    pub col_ptrs: &'a [i32], // zero copy
+    pub row_idx: &'a [i32],  // zero copy
+    pub values: &'a [f64],   // zero copy
 }
 impl<'a> CscRef<'a> {
     pub fn new_checked(
         nrow: usize,
         ncol: usize,
-        p_slot: &[i32],
-        i_slot: &[i32],
+        p_slot: &'a [i32],
+        i_slot: &'a [i32],
         x_slot: &'a [f64],
     ) -> CscRef<'a> {
         // Validate CSC structure (mirrors faer::SymbolicSparseColMat::new_checked)
@@ -23,27 +23,30 @@ impl<'a> CscRef<'a> {
             ncol
         );
 
-        // i32 -> usize conversion is unavoidable since R uses 32-bit indices
-        let col_ptrs: Vec<usize> = p_slot
-            .iter()
-            .map(|&v| {
-                assert!(v >= 0, "negative column pointer: {}", v);
-                v as usize
-            })
-            .collect();
-
-        // col_ptrs must be monotonically non-decreasing
+        // col_ptrs must be monotonically non-decreasing and non-negative
         for j in 0..ncol {
             assert!(
-                col_ptrs[j] <= col_ptrs[j + 1],
+                p_slot[j] >= 0,
+                "negative column pointer at {}: {}",
+                j,
+                p_slot[j]
+            );
+            assert!(
+                p_slot[j] <= p_slot[j + 1],
                 "col_ptrs not monotonic at column {}: {} > {}",
                 j,
-                col_ptrs[j],
-                col_ptrs[j + 1]
+                p_slot[j],
+                p_slot[j + 1]
             );
         }
+        assert!(
+            p_slot[ncol] >= 0,
+            "negative column pointer at {}: {}",
+            ncol,
+            p_slot[ncol]
+        );
 
-        let nnz = col_ptrs[ncol];
+        let nnz = p_slot[ncol] as usize;
         assert_eq!(
             i_slot.len(),
             nnz,
@@ -59,28 +62,26 @@ impl<'a> CscRef<'a> {
             nnz
         );
 
-        let row_idx: Vec<usize> = i_slot
-            .iter()
-            .map(|&v| {
+        // Validate row indices capacity and strictly ascending order explicitly
+        for j in 0..ncol {
+            let start = p_slot[j] as usize;
+            let end = p_slot[j + 1] as usize;
+            if start < end {
+                let mut prev = i_slot[start];
                 assert!(
-                    v >= 0 && (v as usize) < nrow,
+                    prev >= 0 && (prev as usize) < nrow,
                     "row index out of bounds: {} (nrows={})",
-                    v,
+                    prev,
                     nrow
                 );
-                v as usize
-            })
-            .collect();
-
-        // Verify row indices are strictly sorted and unique within each column
-        // (This is exactly what faer's `check_row_idx` enforces)
-        for j in 0..ncol {
-            let start = col_ptrs[j];
-            let end = col_ptrs[j + 1];
-            if start < end {
-                let mut prev = row_idx[start];
                 for idx in (start + 1)..end {
-                    let curr = row_idx[idx];
+                    let curr = i_slot[idx];
+                    assert!(
+                        curr >= 0 && (curr as usize) < nrow,
+                        "row index out of bounds: {} (nrows={})",
+                        curr,
+                        nrow
+                    );
                     assert!(
                         prev < curr,
                         "row indices not strictly sorted in column {}: {} >= {}",
@@ -96,9 +97,9 @@ impl<'a> CscRef<'a> {
         CscRef {
             nrows: nrow,
             ncols: ncol,
-            col_ptrs,
-            row_idx,
-            values: x_slot, // direct pointer borrow, no .to_vec()
+            col_ptrs: p_slot,
+            row_idx: i_slot,
+            values: x_slot,
         }
     }
 }

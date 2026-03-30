@@ -13,10 +13,10 @@ pub fn spmv(mat: &CscRef, x: &[f64], y: &mut [f64]) {
         if x_col == 0.0 {
             continue;
         }
-        let start = mat.col_ptrs[col];
-        let end = mat.col_ptrs[col + 1];
+        let start = mat.col_ptrs[col] as usize;
+        let end = mat.col_ptrs[col + 1] as usize;
         for idx in start..end {
-            let row = mat.row_idx[idx];
+            let row = mat.row_idx[idx] as usize;
             y[row] += mat.values[idx] * x_col;
         }
     }
